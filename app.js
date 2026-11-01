@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -13,7 +14,7 @@ const PORT = process.env.PORT || 5050;
 
 // Check JWT secret
 if (!process.env.JWT_SECRET) {
-    console.error("JWT_SECRET is missing in .env");
+    console.error("JWT_SECRET is missing");
     process.exit(1);
 }
 
@@ -24,20 +25,23 @@ app.use(express.static(path.join(__dirname, "public")));
 // API routes
 app.use("/api", leaveRoutes);
 
-
 // ===============================
 // CREATE / UPDATE AUTHORITY ACCOUNT
 // ===============================
 
 async function createAuthority() {
-    const email = process.env.AUTHORITY_EMAIL.trim().toLowerCase();
+    const email = (process.env.AUTHORITY_EMAIL || "")
+        .trim()
+        .toLowerCase();
+
     const password = process.env.AUTHORITY_PASSWORD;
+
     const username =
         process.env.AUTHORITY_NAME || "Leave Administrator";
 
     if (!email || !password) {
         throw new Error(
-            "AUTHORITY_EMAIL and AUTHORITY_PASSWORD are required in .env"
+            "AUTHORITY_EMAIL and AUTHORITY_PASSWORD are required"
         );
     }
 
@@ -48,7 +52,6 @@ async function createAuthority() {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     if (!authority) {
-
         // Create new authority
         authority = await User.create({
             username,
@@ -63,7 +66,6 @@ async function createAuthority() {
         console.log("Authority account created successfully");
 
     } else {
-
         // Update existing account
         authority.username = username;
         authority.password = hashedPassword;
@@ -75,14 +77,12 @@ async function createAuthority() {
     }
 }
 
-
 // ===============================
 // START SERVER
 // ===============================
 
 async function startServer() {
     try {
-
         // Connect MongoDB
         await connectDB();
 
@@ -91,13 +91,10 @@ async function startServer() {
 
         // Start server
         app.listen(PORT, () => {
-            console.log(
-                `Server running at http://localhost:${PORT}`
-            );
+            console.log(`Server running on port ${PORT}`);
         });
 
     } catch (error) {
-
         console.error(
             "Application startup failed:",
             error.message
