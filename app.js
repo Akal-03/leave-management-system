@@ -4,6 +4,7 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const bcrypt = require("bcryptjs");
+const cors = require("cors");
 
 const connectDB = require("./config/db");
 const User = require("./models/User");
@@ -19,16 +20,24 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Middleware
+app.use(cors({
+    origin: "https://akal-03.github.io"
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
 app.use("/api", leaveRoutes);
 
-// ===============================
-// CREATE / UPDATE AUTHORITY ACCOUNT
-// ===============================
+// Health check
+app.get("/", (req, res) => {
+    res.json({
+        message: "Leave Management Backend is running"
+    });
+});
 
+// CREATE / UPDATE AUTHORITY ACCOUNT
 async function createAuthority() {
     const email = (process.env.AUTHORITY_EMAIL || "")
         .trim()
@@ -45,14 +54,11 @@ async function createAuthority() {
         );
     }
 
-    // Find authority by email
     let authority = await User.findOne({ email });
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
     if (!authority) {
-        // Create new authority
         authority = await User.create({
             username,
             email,
@@ -66,7 +72,6 @@ async function createAuthority() {
         console.log("Authority account created successfully");
 
     } else {
-        // Update existing account
         authority.username = username;
         authority.password = hashedPassword;
         authority.role = "authority";
@@ -77,19 +82,13 @@ async function createAuthority() {
     }
 }
 
-// ===============================
 // START SERVER
-// ===============================
-
 async function startServer() {
     try {
-        // Connect MongoDB
         await connectDB();
 
-        // Create/update authority account
         await createAuthority();
 
-        // Start server
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
@@ -104,5 +103,5 @@ async function startServer() {
     }
 }
 
-// Start application
 startServer();
+```
