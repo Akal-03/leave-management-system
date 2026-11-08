@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 
 const express = require("express");
@@ -21,24 +20,37 @@ if (!process.env.JWT_SECRET) {
 
 // Middleware
 app.use(cors({
-    origin: "https://akal-03.github.io"
+    origin: [
+        "https://akal-03.github.io"
+    ]
 }));
 
 app.use(express.json());
+
+// Serve frontend files from public folder
 app.use(express.static(path.join(__dirname, "public")));
+
+// Home page
+app.get("/", (req, res) => {
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
+});
 
 // API routes
 app.use("/api", leaveRoutes);
 
 // Health check
-app.get("/", (req, res) => {
+app.get("/health", (req, res) => {
     res.json({
+        success: true,
         message: "Leave Management Backend is running"
     });
 });
 
 // CREATE / UPDATE AUTHORITY ACCOUNT
 async function createAuthority() {
+
     const email = (process.env.AUTHORITY_EMAIL || "")
         .trim()
         .toLowerCase();
@@ -59,6 +71,7 @@ async function createAuthority() {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     if (!authority) {
+
         authority = await User.create({
             username,
             email,
@@ -72,6 +85,7 @@ async function createAuthority() {
         console.log("Authority account created successfully");
 
     } else {
+
         authority.username = username;
         authority.password = hashedPassword;
         authority.role = "authority";
@@ -84,16 +98,21 @@ async function createAuthority() {
 
 // START SERVER
 async function startServer() {
+
     try {
+
         await connectDB();
 
         await createAuthority();
 
         app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            console.log(
+                `Server running on port ${PORT}`
+            );
         });
 
     } catch (error) {
+
         console.error(
             "Application startup failed:",
             error.message
@@ -104,4 +123,3 @@ async function startServer() {
 }
 
 startServer();
-```
