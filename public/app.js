@@ -49,54 +49,60 @@ function showSection(section) {
 // API FUNCTION
 // ======================================================
 
-async function api(
-    url,
-    options = {}
-) {
+// ======================================================
+// API CONFIGURATION
+// ======================================================
+
+const API_BASE_URL =
+    "https://leave-management-system-1-c4bn.onrender.com";
+
+
+// ======================================================
+// API FUNCTION
+// ======================================================
+
+async function api(url, options = {}) {
 
     const headers = {
-
-        "Content-Type":
-            "application/json",
-
+        "Content-Type": "application/json",
         ...(options.headers || {})
-
     };
 
-
     if (token) {
-
-        headers.Authorization =
-            `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
     }
 
+    const response = await fetch(
+        `${API_BASE_URL}${url}`,
+        {
+            ...options,
+            headers
+        }
+    );
 
-    const response =
-        await fetch(
-            url,
-            {
-                ...options,
-                headers
-            }
-        );
+    const contentType =
+        response.headers.get("content-type") || "";
 
+    let data;
 
-    const data =
-        await response.json();
-
-
-    if (!response.ok) {
+    if (contentType.includes("application/json")) {
+        data = await response.json();
+    } else {
+        const errorText = await response.text();
 
         throw new Error(
-            data.message ||
-            "Something went wrong"
+            `Server returned an invalid response. Status: ${response.status}`
         );
     }
 
+    if (!response.ok) {
+        throw new Error(
+            data.message || "Something went wrong"
+        );
+    }
 
     return data;
 }
-
 
 // ======================================================
 // SHOW MESSAGE
